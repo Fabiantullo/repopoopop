@@ -1,0 +1,74 @@
+---
+# tasks file for pruebas
+# ○ Cargar en /etc/host las VM para la resolución de nombre.
+# IP Nombre-VM
+# ○ De tal forma que se pueda hacer referencia por nombre a las VM levantadas.
+# ○ Cruzar las claves de ssh para su logueo sin clave.
+# ○ Configurar los usuarios para que no requieran de clave al realizar sudo.
+# ○ scriptear la Instalación de todos los programas que usarán en la resolución del TP
+
+- name: Agregar entradas al archivo hosts
+
+  become: yes
+  lineinfile:
+    path: /etc/hosts
+    line: "{{ item }}"
+    state: present
+  with_items:
+    - "192.168.56.4 testing"
+    - "192.168.56.5 produccion"
+  
+
+- name: Configurar los usuarios para que no requieran de clave al realizar sudo.
+  become: yes
+  lineinfile:
+    path: /etc/sudoers
+    line: "{{ item }}"
+    state: present
+  with_items:
+    - "%sudo ALL=(ALL) NOPASSWD: ALL"
+
+- name: "local /etc/hosts - flush hosts"
+  become: yes
+  lineinfile:
+    dest: "/etc/hosts"
+    line: "{{ item }}"
+    state: present
+  with_items:
+    - "192.168.56.4 testing"
+    - "192.168.56.5 produccion"
+  delegate_to: 127.0.0.1
+
+- name: Asegurarse de que PubkeyAuthentication esté habilitado
+
+      lineinfile:
+
+        path: /etc/ssh/sshd_config
+
+        regexp: '^\s*#?\s*PubkeyAuthentication'
+
+        line: 'PubkeyAuthentication yes'
+
+        state: present
+
+
+- name: Asegurarse de que AuthorizedKeysFile esté configurado
+
+  lineinfile:
+
+    path: /etc/ssh/sshd_config
+
+    regexp: '^\s*#?\s*AuthorizedKeysFile'
+
+    line: 'AuthorizedKeysFile .ssh/authorized_keys'
+
+    state: present
+
+
+- name: Reiniciar el servicio SSH para aplicar los cambios
+
+  service:
+
+    name: sshd
+
+    state: restarted

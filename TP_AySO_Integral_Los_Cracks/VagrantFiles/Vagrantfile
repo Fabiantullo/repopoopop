@@ -1,0 +1,57 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+
+    config.vm.define "testing" do |vm1|
+      vm1.vm.box = "ubuntu/jammy64"
+      vm1.vm.hostname = "VM1Grupoloscracks"
+      vm1.vm.network "private_network", :name => '', ip: "192.168.56.4"
+      
+  
+      # Agrega la key Privada de ssh en .vagrant/machines/default/virtualbox/private_key
+      vm1.ssh.insert_key = true
+      # Agrego un nuevo disco 
+      vm1.vm.disk :disk, size: "5GB", name: "#{vm1.vm.hostname}_extra_storage"
+      vm1.vm.disk :disk, size: "3GB", name: "#{vm1.vm.hostname}_extra_storage2"
+      vm1.vm.disk :disk, size: "2GB", name: "#{vm1.vm.hostname}_extra_storage3"
+      vm1.vm.disk :disk, size: "1GB", name: "#{vm1.vm.hostname}_extra_storage4"
+
+
+      vm1.vm.provider "virtualbox" do |vb|
+        vb.memory = "1024"
+        vb.name = "VM1-Grupo-los_cracks"
+        vb.cpus = 1
+        vb.linked_clone = true
+        # Seteo controladora Grafica
+        vb.customize ['modifyvm', :id, '--graphicscontroller', 'vmsvga']
+      end
+      vm1.vm.provision "shell", path: "script_Enable_ssh_password.sh"
+      vm1.vm.provision "ansible" do |ansible|
+        ansible.playbook = "playbook.yml"    
+      end
+    end
+
+    config.vm.define "produccion" do |vm2|
+      vm2.vm.box = "generic/fedora28"
+      vm2.vm.hostname = "VM2Grupoloscracks"
+      vm2.vm.network "private_network", :name => '', ip: "192.168.56.5"
+  
+      # Agrega la key Privada de ssh en .vagrant/machines/default/virtualbox/private_key
+      vm2.ssh.insert_key = true
+      vm2.vm.provider "virtualbox" do |vb2|
+        vb2.memory = "1024"
+        vb2.name = "VM2-Grupo-los_cracks"
+        vb2.cpus = 1
+        vb2.linked_clone = true
+        vb2.customize ['modifyvm', :id, '--graphicscontroller', 'vmsvga']
+      end
+        
+      vm2.vm.provision "shell", path: "script_Enable_ssh_password.sh"
+      vm2.vm.provision "ansible" do |ansible|
+        ansible.playbook = "playbook.yml"
+      end
+    end
+
+  
+end

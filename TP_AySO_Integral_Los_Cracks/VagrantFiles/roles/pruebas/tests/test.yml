@@ -1,0 +1,4 @@
+---
+- hosts:
+    - testing: 192.168.56.4
+    - produccion: 192.168.56.5
